@@ -28,10 +28,34 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
+			"name":    "faisal",
 		})
 	})
 
-	r.POST("/exe", client.ExeHandler)
+	r.POST("/add", func(c *gin.Context) {
+
+		type Payload struct {
+			A int
+			B int
+		}
+
+		var payload Payload
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(400, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		add := payload.A + payload.B
+
+		c.JSON(200, gin.H{
+			"result": add,
+		})
+	})
+
+	r.POST("/api-caller", client.ApiCallerHandler)
 
 	r.Run(port)
 }

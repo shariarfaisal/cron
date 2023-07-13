@@ -22,7 +22,7 @@ func NewClient(redisAddr string) *Client {
 	}
 }
 
-func (client *Client) ExeHandler(c *gin.Context) {
+func (client *Client) ApiCallerHandler(c *gin.Context) {
 
 	var payload task.ApiRequestPayload
 
@@ -45,7 +45,7 @@ func (client *Client) ExeHandler(c *gin.Context) {
 		dateTime = time.Now()
 	}
 
-	if dateTime.Before(time.Now()) {
+	if payload.ExeAt != "" && dateTime.Before(time.Now()) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "exe_at must be in the future",
 		})
@@ -57,9 +57,18 @@ func (client *Client) ExeHandler(c *gin.Context) {
 	}
 
 	task := asynq.NewTask("instant", taskPayload, asynq.MaxRetry(payload.Retry))
-	client.redisClient.Enqueue(task, asynq.ProcessAt(dateTime), asynq.Retention(time.Hour*24))
 
-	c.JSON(200, gin.H{
+	info, err := client.redisClient.Enqueue(task, asynq.ProcessAt(dateTime), asynq.Retention(time.Hour*24))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
+		"status":  http.StatusOK,
+		"info":    info,
 	})
 }
