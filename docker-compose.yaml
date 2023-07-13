@@ -1,0 +1,26 @@
+version: "3"
+services:
+  redis: 
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+  asynqmon:
+    image: hibiken/asynqmon
+    container_name: asynqmon
+    ports: 
+      - "8080:8080"
+    command: --redis-addr=redis:6379
+    depends_on:
+      - redis
+  # app: 
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - redis
+  #   command: [ "/app/main" ]
+volumes:
+  progresDB:
